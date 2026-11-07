@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="340" viewBox="0 0 1100 340">
+  <defs>
+    <linearGradient id="sky" x2="1" y2="1">
+      <stop stop-color="#140d28"/><stop offset=".6" stop-color="#302056"/><stop offset="1" stop-color="#17102b"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#b482ff" stop-opacity=".48"/><stop offset="1" stop-color="#9850ef" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="title" x2="0" y2="1">
+      <stop stop-color="#fff4ff"/><stop offset="1" stop-color="#c7a0fa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1100" height="340" fill="url(#sky)"/>
+  <ellipse cx="825" cy="150" rx="330" ry="170" fill="url(#glow)"/>
+  <path d="M0 300 156 246 258 264 415 221 528 245 625 189 711 226 848 126 927 210 996 170 1100 244V340H0Z" fill="#2d1c4a"/>
+  <path d="M0 331 190 268 305 310 483 269 585 294 730 252 830 287 985 240 1100 280V340H0Z" fill="#181128"/>
+  <path d="M765 227 849 127 882 159M933 210l63-40 69 49" fill="none" stroke="#b995fb" stroke-opacity=".32" stroke-width="2"/>
+  <path d="M898 42 919 77 898 110 877 77Z" fill="#be9aef" fill-opacity=".21" stroke="#d6b5ff" stroke-opacity=".5"/>
+  <path d="M1024 112 1031 125 1024 138 1017 125Z" fill="#d6b5ff" fill-opacity=".65"/>
+  <image href="emblem.svg" x="62" y="52" width="236" height="236"/>
+  <text x="342" y="128" fill="#d6b5ff" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="600" letter-spacing="5">ARK: SURVIVAL ASCENDED</text>
+  <text x="337" y="207" fill="url(#title)" font-family="Segoe UI,Arial,sans-serif" font-size="80" font-weight="750" letter-spacing="-2">ASA CHISPI</text>
+  <text x="343" y="254" fill="#c9b4e4" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="600" letter-spacing="8">SERVER MANAGER</text>
+  <path d="M0 339H1100" stroke="#9668df" stroke-width="2"/>
+</svg>

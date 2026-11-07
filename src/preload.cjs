@@ -1,0 +1,2 @@
+const {contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('asa',{ready:()=>ipcRenderer.send('startup:ready'),onEvent:callback=>{const listener=(_event,event)=>callback(event);ipcRenderer.on('asa:event',listener);return ()=>ipcRenderer.removeListener('asa:event',listener);},invoke:async(method,data)=>{const r=await ipcRenderer.invoke('asa',method,data);if(!r.ok)throw Error(r.error);return r.value;}});

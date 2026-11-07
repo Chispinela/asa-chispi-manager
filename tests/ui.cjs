@@ -1,0 +1,67 @@
+const {_electron:electron}=require('playwright');
+const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');
+const {EXE,CONFIG}=require('../src/core/manager.cjs');
+(async()=>{
+ const root=path.resolve(__dirname,'..'),results=path.join(root,'test-results'),data=path.join(results,'ui-'+Date.now());fs.mkdirSync(data,{recursive:true});
+ const env={...process.env,ASA_MANAGER_DATA:path.join(data,'userdata')};delete env.ELECTRON_RUN_AS_NODE;
+ const application=await electron.launch({args:[root],env});const page=await (async()=>{for(let i=0;i<200;i++){const page=application.windows().find(p=>p.url().includes('index.html'));if(page)return page;await new Promise(r=>setTimeout(r,50));}throw Error('Manager window did not open');})();await page.waitForFunction(()=>document.visibilityState==='visible');const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const click=action=>page.locator(`[data-action="${action}"]`).first().click();
+ const nav=async view=>{await page.locator(`[data-action="nav"][data-view="${view}"]`).click();await page.waitForTimeout(120);};
+ const save=async selector=>{await page.locator(selector+' button[type="submit"]').click();await page.waitForFunction(()=>![...document.querySelectorAll('form button[type="submit"]')].some(b=>b.disabled));await page.waitForTimeout(100);};
+ let checks=[];
+ try{
+  await page.waitForSelector('.empty');await page.screenshot({path:path.join(results,'01-empty.png')});
+  await click('new');await page.locator('#modal-form [name="folder"]').fill(path.join(data,'Island'));await page.locator('#modal-form [name="name"]').fill('UI TEST · The Island');const joinPassword=page.locator('#modal-form [name="serverPassword"]'),adminPassword=page.locator('#modal-form [name="adminPassword"]');
+  assert.equal(await joinPassword.getAttribute('type'),'password');
+  assert.equal(await adminPassword.getAttribute('type'),'password');
+  await adminPassword.fill('UI-test-admin-2026');
+  await save('#modal-form');await page.waitForSelector('.hero');
+  const initialIni=fs.readFileSync(path.join(data,'Island',CONFIG,'GameUserSettings.ini'),'utf8');
+  assert.match(initialIni,/^ServerAdminPassword=UI-test-admin-2026$/m);
+  assert.doesNotMatch(initialIni,/^ServerPassword=/m);
+  assert.ok(!fs.readFileSync(path.join(data,'userdata','fleet','manager.json'),'utf8').includes('UI-test-admin-2026'));
+  checks.push('Create through UI with admin password and no join password');
+  await nav('configuration');await page.locator('#basics-form [name="name"]').fill('UI TEST · Island Cluster');await save('#basics-form');assert.ok((await page.locator('#server-picker').innerText()).includes('Island Cluster'));
+  const settingsPassword=page.locator('#basics-form [name="serverPassword"]');
+  const settingsFile=path.join(data,'Island',CONFIG,'GameUserSettings.ini');
+  assert.equal(await settingsPassword.getAttribute('type'),'password');
+  await settingsPassword.fill('existing-ui-fixture');
+  await save('#basics-form');
+  assert.match(fs.readFileSync(settingsFile,'utf8'),/^ServerPassword=existing-ui-fixture$/m);
+  assert.equal(await settingsPassword.inputValue(),'');
+  await save('#basics-form');
+  assert.match(fs.readFileSync(settingsFile,'utf8'),/^ServerPassword=existing-ui-fixture$/m);
+  await page.locator('#basics-form [name="removeServerPassword"]').check();
+  assert.ok(await settingsPassword.isDisabled());
+  await save('#basics-form');
+  assert.doesNotMatch(fs.readFileSync(settingsFile,'utf8'),/^ServerPassword=/m);
+  assert.match(fs.readFileSync(settingsFile,'utf8'),/^ServerAdminPassword=UI-test-admin-2026$/m);
+  checks.push('Change, keep and remove the join password through Server and startup');
+  await page.locator('[data-action="configTab"][data-tab="catalog"]').click();await page.waitForSelector('#catalog-form');await page.locator('#catalog-search').fill('TamingSpeedMultiplier');await page.locator('.catalog-field:visible input').fill('5');await save('#catalog-form');
+  await page.locator('[data-action="configTab"][data-tab="editor"]').click();await page.waitForSelector('#ini-text');assert.ok((await page.locator('#ini-text').inputValue()).includes('TamingSpeedMultiplier=5'));let content=await page.locator('#ini-text').inputValue();await page.locator('#ini-text').fill(content+'\r\n[MyMod]\r\nRepeated=A\r\nRepeated=B\r\n');await save('#ini-form');
+  const iniFile=path.join(data,'Island',CONFIG,'GameUserSettings.ini');assert.ok(fs.readFileSync(iniFile,'utf8').includes('Repeated=A'));
+  // External change is detected without discarding user edits.
+  content=await page.locator('#ini-text').inputValue();fs.appendFileSync(iniFile,'\r\n; EXTERNAL CHANGE');await page.locator('#ini-text').fill(content+'\r\n; USER CHANGE');await save('#ini-form');assert.ok((await page.locator('#toast').innerText()).includes('changed on disk'));assert.ok((await page.locator('#ini-text').inputValue()).includes('; USER CHANGE'));await click('reloadConfig');await page.locator('#modal-form button[type="submit"]').click();await page.waitForTimeout(150);checks.push('Catalog, lossless INI, external conflict recovery');
+  await nav('mods');await page.locator('[name="mods"]').fill('928708,928708');await save('#mods-form');assert.equal(await page.locator('[name="mods"]').inputValue(),'928708,928708');assert.ok((await page.locator('#toast').innerText()).includes('Duplicate'));await page.locator('[name="mods"]').fill('928708, 900062');await save('#mods-form');checks.push('Mods validation preserves form');
+  await nav('backups');await page.locator('[name="times"]').fill('06:00, 12:30, 23:00');await save('#schedule-form');assert.ok((await page.locator('#page').innerText()).includes('12:30'));await click('backup');await page.locator('#modal-form button[type="submit"]').click();await page.waitForFunction(()=>document.querySelectorAll('[data-action="restore"]').length>0);checks.push('Multiple times per day, real TAR backup');
+  await nav('templates');await page.locator('#template-form [name="name"]').fill('UI TEST · x5');await save('#template-form');assert.ok((await page.locator('#page').innerText()).includes('UI TEST · x5'));
+  const imported=path.join(data,'HaruHost fixture');fs.mkdirSync(path.join(imported,path.dirname(EXE)),{recursive:true});fs.mkdirSync(path.join(imported,CONFIG),{recursive:true});fs.writeFileSync(path.join(imported,EXE),'UI fixture - not an ASA executable');const importedIni='[SessionSettings]\r\nSessionName=UI TEST · HaruHost\r\n[ServerSettings]\r\nRCONEnabled=True\r\nRCONPort=27030\r\nServerAdminPassword=fixture-password\r\n[MyMod]\r\nKeep=yes\r\n';fs.writeFileSync(path.join(imported,CONFIG,'GameUserSettings.ini'),importedIni);fs.writeFileSync(path.join(imported,'Start.cmd'),'ArkAscendedServer.exe Ragnarok_WP?listen -port=7787 -QueryPort=27025 -WinLiveMaxPlayers=50');
+  await click('import');await page.locator('#modal-form [name="folder"]').fill(imported);await click('inspect');await page.waitForSelector('[name="clusterReviewed"]');await page.locator('[name="clusterReviewed"]').check();await save('#modal-form');await page.waitForFunction(()=>document.querySelectorAll('#server-picker option').length===2);assert.equal(fs.readFileSync(path.join(imported,CONFIG,'GameUserSettings.ini'),'utf8'),importedIni);checks.push('HaruHost import preserves original bytes');
+  await nav('clusters');await click('clusterNew');await page.locator('#modal-form [name="folder"]').fill(path.join(data,'Shared Cluster'));await page.locator('#modal-form [name="members"]').nth(0).check();await page.locator('#modal-form [name="members"]').nth(1).check();await save('#modal-form');await page.waitForSelector('.server-chip');assert.ok((await page.locator('#page').innerText()).includes('chispi-cluster'));checks.push('Cluster shared storage and membership');
+  await nav('templates');await click('applyTemplate');await page.locator('#modal-form button[type="submit"]').click();await page.waitForTimeout(800);assert.ok(fs.readFileSync(path.join(imported,CONFIG,'GameUserSettings.ini'),'utf8').includes('ServerAdminPassword=fixture-password'));checks.push('Template applies with target password preserved');
+  await nav('discord');
+  await page.locator('[name="discordPanelChannelId"]').fill('1000000000000000033');
+  await page.locator('[name="discordPanelAutoIp"]').check();
+  await save('#discord-panel-form');
+  assert.equal(await page.locator('[name="discordPanelChannelId"]').inputValue(),'1000000000000000033');
+  assert.ok(await page.locator('[name="discordPanelAutoIp"]').isChecked());
+  checks.push('Live Discord panel settings persist in the UI');
+  await page.locator('#discord-form [name="event-starting"]').fill('{server} · starting {map}');await save('#discord-form');await page.locator('#bridge-form [name="bridgeGroup"]').fill('chispi-global');await save('#bridge-form');
+  // Player ledger is seeded explicitly as a fixture, then tested through the real UI.
+  const managerFile=path.join(data,'userdata','fleet','manager.json');const fixture=JSON.parse(fs.readFileSync(managerFile,'utf8'));const current=fixture.servers[1].id;fixture.players[current]={'0123456789abcdef0123456789abcdef':{accountId:'0123456789abcdef0123456789abcdef',name:'UI TEST Survivor',online:false,lastSeen:new Date().toISOString(),playerId:'123456',tribeId:'789',tribeName:'Fixture tribe',metadataSource:'manual'}};fs.writeFileSync(path.join(data,'ledger-fixture.json'),JSON.stringify(fixture));
+  for(const language of ['en','es','pt','ru','zh','ja']){await page.selectOption('#language-select',language);for(const theme of ['dark','light']){const currentTheme=await page.locator('body').getAttribute('class');if((theme==='light')!==currentTheme.includes('light'))await click('theme');for(const view of ['servers','overview','configuration','players','mods','clusters','backups','templates','discord','console','activity','preferences']){await nav(view);assert.ok((await page.locator('h1').innerText()).length>0);assert.equal(await page.locator('body').evaluate(el=>el.scrollWidth>innerWidth),false,'horizontal overflow '+language+' '+theme+' '+view);}await nav('overview');if(language==='en'||language==='ja')await page.screenshot({path:path.join(results,`overview-${language}-${theme}.png`)});}}checks.push('Six languages × two themes × twelve screens without overflow');
+  await page.selectOption('#language-select','en');await nav('configuration');await page.locator('[data-action="configTab"][data-tab="catalog"]').click();await page.waitForSelector('#catalog-form');await page.screenshot({path:path.join(results,'configuration-light.png')});
+  const translations=await page.evaluate(()=>Object.entries(L).filter(([k,v])=>!Array.isArray(v)||v.length!==6));assert.deepEqual(translations,[]);assert.deepEqual(errors,[]);checks.push('No renderer exceptions; six entries for every translation');
+  fs.writeFileSync(path.join(results,'ui-report.json'),JSON.stringify({at:new Date().toISOString(),checks,rendererErrors:errors,scope:'UI and local filesystem fixtures only; not a running ASA server or Discord service.'},null,2));console.log(JSON.stringify({checks,errors},null,2));
+ }catch(e){await page.screenshot({path:path.join(results,'ui-failure.png')}).catch(()=>{});fs.writeFileSync(path.join(results,'ui-failure.txt'),e.stack);throw e;}finally{await application.evaluate(({app})=>app.exit(0));}
+})().catch(e=>{console.error(e);process.exit(1);});

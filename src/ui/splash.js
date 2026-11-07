@@ -1,0 +1,11 @@
+'use strict';
+const preferences=new URLSearchParams(location.search);
+window.currentLanguage=Object.hasOwn(LANGS,preferences.get('language'))?preferences.get('language'):'es';
+document.documentElement.lang=currentLanguage;
+document.body.classList.toggle('light',preferences.get('theme')==='light');
+document.querySelector('#version').textContent='v'+(preferences.get('version')||'1.0.3');
+document.querySelector('#tagline').textContent=t('startup-tagline');
+document.querySelector('.track').setAttribute('aria-label',t('startup-loading'));
+document.querySelector('#status').textContent=t('startup-settings');
+window.startup.onStatus(key=>{document.querySelector('#status').textContent=t(key);if(key==='startup-ready')document.body.classList.add('complete');});
+window.startup.onFinish(()=>document.body.classList.add('leaving'));

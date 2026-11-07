@@ -1,0 +1,16 @@
+{
+  "arkparser": {
+    "version": "0.9.0",
+    "repository": "https://github.com/vertyco/arkparser",
+    "commit": "bd0ed43d9f28321dbe488d894ec59ff3fcf774bc",
+    "archive": "https://codeload.github.com/vertyco/arkparser/zip/bd0ed43d9f28321dbe488d894ec59ff3fcf774bc",
+    "sha256": "6e676225e18bdad094b6ea499128059570fb450c9400ed6f9756335d112748e4",
+    "license": "MIT"
+  },
+  "python": {
+    "version": "3.14.10",
+    "archive": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
+    "sha256": "90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159",
+    "license": "PSF; included in python/LICENSE.txt"
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+release/
+runtime/
+test-results/
+*.log
+.env
+.npm-cache/
+tools/vendor/
+tools/python/
+tools/*.zip
+__pycache__/
+
+design-backups/
+scripts/create-live-island.cjs

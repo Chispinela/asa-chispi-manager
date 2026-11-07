@@ -1,0 +1,11 @@
+{
+  "players": [
+    {
+      "accountId": "0123456789abcdef0123456789abcdef",
+      "characterName": "Example survivor",
+      "playerId": "123456789",
+      "tribeName": "Example tribe",
+      "tribeId": "987654321"
+    }
+  ]
+}

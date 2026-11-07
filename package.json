@@ -1,0 +1,79 @@
+{
+  "name": "asa-chispi-manager",
+  "version": "1.0.7",
+  "description": "Windows manager for ARK Survival Ascended dedicated servers",
+  "author": "Chispi",
+  "license": "MIT",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "test:ui": "node tests/ui.cjs",
+    "dist": "electron-builder --win nsis --x64",
+    "pack": "electron-builder --win --dir --x64",
+    "test:players": "node tests/players-ui.cjs",
+    "test:startup": "node tests/startup-ui.cjs",
+    "render:logo": "electron scripts/render-logo.cjs",
+    "test:steam-ui": "node tests/steam-ui.cjs"
+  },
+  "devDependencies": {
+    "electron": "44.9.1",
+    "electron-builder": "26.15.3",
+    "playwright": "1.64.1"
+  },
+  "build": {
+    "appId": "com.chispi.asamanager",
+    "productName": "ASA Chispi Manager",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "docs/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "tools/python",
+        "to": "reader/python",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**"
+        ]
+      },
+      {
+        "from": "tools/read_players.py",
+        "to": "reader/read_players.py"
+      },
+      {
+        "from": "tools/arkparser-LICENSE",
+        "to": "reader/arkparser-LICENSE"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "ASA-Chispi-Manager-Setup-${version}.${ext}",
+      "installerLanguages": [
+        "es_ES",
+        "en_US",
+        "pt_PT",
+        "ru_RU",
+        "zh_CN",
+        "ja_JP"
+      ],
+      "displayLanguageSelector": true
+    }
+  }
+}
