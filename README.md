@@ -1,8 +1,11 @@
 # ASA Chispi Manager
 
+> [!IMPORTANT]
+> **Developed with artificial intelligence.** ChatGPT and Codex were used extensively to write the code, design the interface, create automated tests and write the documentation for Chispinela.
+
 ![ASA Chispi Manager](assets/discord-banner.png)
 
-A Windows desktop manager for **ARK: Survival Ascended** dedicated servers. Install and update several maps, manage saves and clusters, and publish a live server dashboard in Discord. Made with **ChatGPT and Codex** for Chispinela. Independent community project.
+A Windows desktop manager for **ARK: Survival Ascended** dedicated servers. Install and update several maps, manage saves and clusters, and publish a live server dashboard in Discord. Independent community project.
 
 **[Download the Windows x64 installer · v1.0.7](https://github.com/Chispinela/asa-chispi-manager/releases/download/v1.0.7/ASA-Chispi-Manager-Setup-1.0.7.exe)** · [Release notes and checksum](https://github.com/Chispinela/asa-chispi-manager/releases/tag/v1.0.7) · **[Guía completa en castellano](docs/GUIA.md)**
 

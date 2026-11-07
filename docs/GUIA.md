@@ -1,5 +1,8 @@
 # Guía de ASA Chispi Manager
 
+> [!IMPORTANT]
+> **Desarrollado con inteligencia artificial.** Se utilizaron ampliamente ChatGPT y Codex para escribir el código, diseñar la interfaz, crear pruebas automatizadas y redactar la documentación para Chispinela.
+
 ## 1. Instalar en Windows
 
 1. Descarga el [instalador 1.0.7 para Windows x64](https://github.com/Chispinela/asa-chispi-manager/releases/download/v1.0.7/ASA-Chispi-Manager-Setup-1.0.7.exe).
